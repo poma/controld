@@ -1,0 +1,11 @@
+sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
+cd /tmp
+wget https://raw.github.com/pythonchik/nooLite/master/nooLite.c
+gcc nooLite.c -o noolite -lusb-1.0 
+sudo cp /tmp/noolite /usr/local/bin/
+sudo chmod +x /usr/local/bin/noolite 
+
+sudo noolite -api -on_ch 5
+sudo noolite -api -off_ch 5
+sudo noolite -api -sw_ch 1 
+sudo noolite -api -set_ch 2 30
