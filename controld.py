@@ -1,6 +1,6 @@
 #!/usr/bin/env python
- 
-import os, sys, time, socket, httplib2, datetime, thread
+
+import os, sys, time, socket, httplib2, datetime, thread, traceback
 from daemon import Daemon
 
 class MyDaemon(Daemon):
@@ -16,33 +16,45 @@ class MyDaemon(Daemon):
 	}
 
 	def run(self):
-		s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-		s.connect(self.lircd_address)
+		try:
+			s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+			s.connect(self.lircd_address)
+		except:
+			self.log("Initialization exception!\n" + traceback.format_exc())
+			raise
 		while True:
-			data = s.recv(1024)
-			if not data: 
+			try:
+				data = s.recv(1024)
+			except:
+				self.log("Data receive exception!\n" + traceback.format_exc())
+				raise
+			if not data:
 				self.log("Socket closed, exiting")
 				break
 			self.log("Received: " + repr(data))
-			thread.start_new_thread(self.process, data.strip())
+			thread.start_new_thread(self.process, (data.strip(), ))
 		s.close()
 
 	def log(self, message):
 		open(self.logfile, "a").write("[%s] %s\n" % (datetime.datetime.now(), message))
 
 	def process(self, key):
-		if key in self.keys_light:
-			command = self.noolite_command + self.keys_light[key]
-			self.log("Executing " + repr(command))
-			code = os.system(command)
-			self.log("Return code: " + repr(code))
-		else:
-			url = "http://%s/remote?key=%s" % (self.mac_host, key)
-			self.log("Requesting " + repr(url))
-			r, content = httplib2.Http().request(url)
-			self.log("Response code: %s %s" % (r.status, r.reason))
-			#if content != "ok":
-			#	self.log("Error on key %s: %s" % (repr(key), repr(content)))
+		try:
+			if key in self.keys_light:
+				command = self.noolite_command + self.keys_light[key]
+				self.log("Executing " + repr(command))
+				code = os.system(command)
+				self.log("Return code: " + repr(code))
+			else:
+				url = "http://%s/remote?key=%s" % (self.mac_host, key)
+				self.log("Requesting " + repr(url))
+				r, content = httplib2.Http().request(url)
+				self.log("Response code: %s %s" % (r.status, r.reason))
+				#if content != "ok":
+				#self.log("Error on key %s: %s" % (repr(key), repr(content)))
+		except:
+			self.log("Error executing command!\n" + traceback.format_exc())
+			#raise
 
 
 
@@ -59,8 +71,8 @@ if __name__ == "__main__":
 			daemon.stop()
 		elif 'restart' == sys.argv[1]:
 			daemon.restart()
-                elif 'run' == sys.argv[1]:
-                        daemon.run()
+		elif 'run' == sys.argv[1]:
+			daemon.run()
 		else:
 			print "Unknown command"
 			sys.exit(2)
