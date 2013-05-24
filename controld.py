@@ -65,8 +65,9 @@ if __name__ == "__main__":
 			daemon.run()
 		else:
 			print "Unknown command"
+			print "usage: controld start|stop|restart|run"
 			sys.exit(2)
 		sys.exit(0)
 	else:
-		print "usage: %s start|stop|restart|run" % sys.argv[0]
+		print "usage: controld start|stop|restart|run"
 		sys.exit(2)
