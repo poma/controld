@@ -1,6 +1,6 @@
 #!/usr/bin/env python
  
-import os, sys, time, socket, httplib2, datetime
+import os, sys, time, socket, httplib2, datetime, thread
 from daemon import Daemon
 
 class MyDaemon(Daemon):
@@ -24,7 +24,7 @@ class MyDaemon(Daemon):
 				self.log("Socket closed, exiting")
 				break
 			self.log("Received: " + repr(data))
-			self.process(data.strip())
+			thread.start_new_thread(self.process, data.strip())
 		s.close()
 
 	def log(self, message):
