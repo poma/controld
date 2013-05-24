@@ -1,6 +1,6 @@
 lircd_socket = '/var/run/lirc/lircd'
 noolite_command = 'noolite -api -'
-http_host = '192.168.0.101'
+http_host = '192.168.0.101:8080'
 logfile = '/var/log/controld'
 pidfile = '/var/run/controld.pid'
 
