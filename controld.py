@@ -22,24 +22,31 @@ class MyDaemon(Daemon):
 				self.log("Socket closed, exiting")
 				break
 			self.log("Received: " + repr(data))
-			thread.start_new_thread(self.process, (data.strip(), ))
+			key, count = self.parse(data)
+			self.log("Parsed: %s, %s" % (key, count))
+			thread.start_new_thread(self.process, (key, count))
 		s.close()
 
 	def log(self, message):
 		open(settings.logfile, "a").write("[%s] %s\n" % (datetime.datetime.now(), message))
+	
+	def parse(self, line):
+		a = line.split(' ')
+		return (a[2], a[1])
 
-	def process(self, key):
+	def process(self, key, count):
 		try:
 			if key in settings.keys_light:
+				if (count != "00"): return
 				command = settings.noolite_command + settings.keys_light[key]
 				self.log("Executing " + repr(command))
 				code = os.system(command)
 				self.log("Return code: " + repr(code))
 			else:
-				url = "http://%s/remote?key=%s" % (settings.http_host, key)
+				url = "http://%s/remote?key=%s&count=%s" % (settings.http_host, key, count)
 				self.log("Requesting " + repr(url))
 				r, content = httplib2.Http().request(url)
-				self.log("Response code: %s %s" % (r.status, r.reason))
+				self.log("Response code: %s %s; %s" % (r.status, r.reason, content))
 				#if content != "ok":
 				#self.log("Error on key %s: %s" % (repr(key), repr(content)))
 		except:

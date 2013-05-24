@@ -5,7 +5,7 @@ logfile = '/var/log/controld'
 pidfile = '/var/run/controld.pid'
 
 keys_light = {
-	"KEY_1" : "sw_ch 6",
+	"KEY_RED" : "sw_ch 5",
 	"KEY_2" : "on_ch 6",
 	"KEY_3" : "set_ch 6 50"
 	}
