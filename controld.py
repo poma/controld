@@ -2,23 +2,13 @@
 
 import os, sys, time, socket, httplib2, datetime, thread, traceback
 from daemon import Daemon
+import settings
 
 class MyDaemon(Daemon):
-	lircd_address = '/var/run/lirc/lircd'
-	noolite_command = 'noolite -api -'
-	mac_host = '192.168.0.101'
-	logfile = '/var/log/controld'
-
-	keys_light = {
-		"KEY_1" : "sw_ch 6",
-		"KEY_2" : "on_ch 6",
-		"KEY_3" : "set_ch 6 50"
-	}
-
 	def run(self):
 		try:
 			s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-			s.connect(self.lircd_address)
+			s.connect(settings.lircd_address)
 		except:
 			self.log("Initialization exception!\n" + traceback.format_exc())
 			raise
@@ -36,17 +26,17 @@ class MyDaemon(Daemon):
 		s.close()
 
 	def log(self, message):
-		open(self.logfile, "a").write("[%s] %s\n" % (datetime.datetime.now(), message))
+		open(settings.logfile, "a").write("[%s] %s\n" % (datetime.datetime.now(), message))
 
 	def process(self, key):
 		try:
-			if key in self.keys_light:
-				command = self.noolite_command + self.keys_light[key]
+			if key in settings.keys_light:
+				command = settings.noolite_command + settings.keys_light[key]
 				self.log("Executing " + repr(command))
 				code = os.system(command)
 				self.log("Return code: " + repr(code))
 			else:
-				url = "http://%s/remote?key=%s" % (self.mac_host, key)
+				url = "http://%s/remote?key=%s" % (settings.mac_host, key)
 				self.log("Requesting " + repr(url))
 				r, content = httplib2.Http().request(url)
 				self.log("Response code: %s %s" % (r.status, r.reason))
@@ -63,7 +53,7 @@ class MyDaemon(Daemon):
 
 # Control daemon
 if __name__ == "__main__":
-	daemon = MyDaemon('/var/run/controld.pid')
+	daemon = MyDaemon(settings.pidfile)
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
 			daemon.start()
