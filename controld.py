@@ -8,15 +8,15 @@ class MyDaemon(Daemon):
 	def run(self):
 		try:
 			s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-			s.connect(settings.lircd_address)
+			s.connect(settings.lircd_socket)
 		except:
-			self.log("Initialization exception!\n" + traceback.format_exc())
+			self.log("Initialization exception, exiting!\n" + traceback.format_exc())
 			raise
 		while True:
 			try:
 				data = s.recv(1024)
 			except:
-				self.log("Data receive exception!\n" + traceback.format_exc())
+				self.log("Data receive exception, exiting!\n" + traceback.format_exc())
 				raise
 			if not data:
 				self.log("Socket closed, exiting")
@@ -36,14 +36,14 @@ class MyDaemon(Daemon):
 				code = os.system(command)
 				self.log("Return code: " + repr(code))
 			else:
-				url = "http://%s/remote?key=%s" % (settings.mac_host, key)
+				url = "http://%s/remote?key=%s" % (settings.http_host, key)
 				self.log("Requesting " + repr(url))
 				r, content = httplib2.Http().request(url)
 				self.log("Response code: %s %s" % (r.status, r.reason))
 				#if content != "ok":
 				#self.log("Error on key %s: %s" % (repr(key), repr(content)))
 		except:
-			self.log("Error executing command!\n" + traceback.format_exc())
+			self.log("Error executing command, continuing execution!\n" + traceback.format_exc())
 			#raise
 
 
@@ -68,5 +68,5 @@ if __name__ == "__main__":
 			sys.exit(2)
 		sys.exit(0)
 	else:
-		print "usage: %s start|stop|restart" % sys.argv[0]
+		print "usage: %s start|stop|restart|run" % sys.argv[0]
 		sys.exit(2)
