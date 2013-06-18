@@ -38,10 +38,12 @@ class MyDaemon(Daemon):
 		try:
 			if key in settings.keys_light:
 				if (count != "00"): return
-				command = settings.noolite_command + settings.keys_light[key]
-				self.log("Executing " + repr(command))
-				code = os.system(command)
-				self.log("Return code: " + repr(code))
+				for line in settings.keys_light[key]:
+					command = settings.noolite_command + line
+					self.log("Executing " + repr(command))
+					code = os.system(command)
+					self.log("Return code: " + repr(code))
+					time.sleep(0.2)
 			else:
 				url = "http://%s/remote?key=%s&count=%s" % (settings.http_host, key, count)
 				self.log("Requesting " + repr(url))
